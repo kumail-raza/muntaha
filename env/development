@@ -1,0 +1,7 @@
+DB_PWD=minhaj
+DB_USER=neo4j
+DB_PORT=7687
+DB_HOST=neo4j
+DB_NAME=neo4j
+HOST=localhost
+PORT=8080
