@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/minhajuddinkhan/muntaha"
-
-	"github.com/minhajuddinkhan/muntaha/neo4j"
-
-	"github.com/sirupsen/logrus"
+	"github.com/minhajuddinkhan/muntaha/resources"
 
 	"github.com/emicklei/go-restful"
-	"github.com/minhajuddinkhan/muntaha/resources/dua"
+	"github.com/minhajuddinkhan/muntaha"
+	"github.com/minhajuddinkhan/muntaha/neo4j"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -24,11 +22,12 @@ func Serve(conf muntaha.Configuration) cli.Command {
 		Action: func(c *cli.Context) error {
 			store := neo4j.NewNeo4jStore(conf.DB.User, conf.DB.Password, conf.DB.Host, conf.DB.Port)
 
-			dr := dua.NewResource(store)
-			restful.DefaultContainer.Add(dr.WebService())
+			wsContainer := restful.NewContainer()
+			mgr := resources.NewResourceManager(store)
+			mgr.SpawnAPIContainer(wsContainer)
 
 			logrus.Infof("listening on port  %s", conf.HttpPort)
-			return http.ListenAndServe(fmt.Sprintf(":%s", conf.HttpPort), nil)
+			return http.ListenAndServe(fmt.Sprintf(":%s", conf.HttpPort), wsContainer)
 		},
 		Flags: []cli.Flag{
 			cli.StringFlag{

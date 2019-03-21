@@ -2,7 +2,7 @@ package models
 
 // Dua Dua
 type Dua struct {
-	Arabic      string
-	Translation string
-	Title       string
+	Arabic      string `json:"arabic,omitempty"`
+	Translation string `json:"translation,omitempty"`
+	Title       string `json:"title,omitempty"`
 }

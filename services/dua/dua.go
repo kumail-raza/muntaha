@@ -27,8 +27,10 @@ func (d *duaservice) GetAll() ([]models.Dua, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	duas := make([]models.Dua, len(nodes))
 	for k, rawNode := range nodes {
+
 		node := rawNode[0].(graph.Node)
 
 		var dua models.Dua
@@ -45,7 +47,8 @@ func (d *duaservice) GetByEmotion(name string) ([]models.Dua, error) {
 
 	cypher := map[string]interface{}{"name": name}
 	nodes, _, _, err := d.Conn.QueryNeoAll(
-		`MATCH(d:Dua),(e:Emotion) WHERE e.name = {name}
+		`MATCH(e:Emotion{name: {name}}),(d:Dua)
+		MATCH (e)-[:RELATED]->(d)
 		RETURN d`, cypher)
 
 	if err != nil {
