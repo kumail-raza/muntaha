@@ -1,15 +1,19 @@
 package dua
 
 import (
+	"fmt"
+
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 	"github.com/johnnadratowski/golang-neo4j-bolt-driver/structures/graph"
 	"github.com/minhajuddinkhan/muntaha/models"
+	"github.com/minhajuddinkhan/muntaha/querybuilder"
 )
 
 // Service Service
 type Service interface {
 	GetAll() ([]models.Dua, error)
 	GetByEmotion(name string) ([]models.Dua, error)
+	CreateDua(dua models.Dua, emo []models.Emotion, org models.Origin) error
 }
 
 // NewService NewService
@@ -21,9 +25,13 @@ type duaservice struct {
 	Conn bolt.Conn
 }
 
+const (
+	getDuaByTitle = "MATCH(d:Dua{ title: {title} }) RETURN d"
+)
+
 func (d *duaservice) GetAll() ([]models.Dua, error) {
-	nodes, _, _, err := d.Conn.QueryNeoAll(
-		`MATCH(d:Dua) RETURN d`, nil)
+	query, args := querybuilder.GetAllDua()
+	nodes, _, _, err := d.Conn.QueryNeoAll(query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -68,4 +76,47 @@ func (d *duaservice) GetByEmotion(name string) ([]models.Dua, error) {
 	}
 
 	return duas, nil
+}
+
+func (d *duaservice) CreateDua(dua models.Dua, emos []models.Emotion, org models.Origin) error {
+
+	query, args := querybuilder.GetDuaByTitle(dua.Title)
+	nodes, _, _, err := d.Conn.QueryNeoAll(query, args)
+	if err != nil {
+		return err
+	}
+	if len(nodes) > 0 {
+		return fmt.Errorf("dua already exists with this title")
+	}
+
+	query, args = querybuilder.CreateDua(dua, org)
+	if _, err = d.Conn.ExecNeo(query, args); err != nil {
+		return err
+	}
+
+	switch org.Type {
+	case "Hadeeth":
+		for _, ref := range org.References {
+			query, args := querybuilder.CreateRelationInRefAndDua(ref.Name, models.Dua{Title: dua.Title})
+			if _, err := d.Conn.ExecNeo(query, args); err != nil {
+				return err
+			}
+		}
+		break
+	case "Quran":
+		q, args := querybuilder.CreateRelationInOriginAndDua(org, models.Dua{Title: dua.Title})
+		if _, err := d.Conn.ExecNeo(q, args); err != nil {
+			return err
+		}
+		break
+	}
+
+	for _, e := range emos {
+		q, args := querybuilder.CreateRelationInEmoAndDua(e, models.Dua{Title: dua.Title})
+		if _, err := d.Conn.ExecNeo(q, args); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
