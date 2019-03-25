@@ -6,12 +6,19 @@ import (
 	"github.com/minhajuddinkhan/muntaha/models"
 )
 
+const (
+	duaRefVar = ModelReference("d")
+	refRefVar = ModelReference("r")
+	orgRefVar = ModelReference("o")
+	emoRefVar = ModelReference("e")
+)
+
 func TestDuaArgModel(t *testing.T) {
 
 	args := make(NeoArgs)
 	expected := `(d:Dua{name: {duaName},title: {duaTitle},translation: {translation})`
 	input := models.Dua{Title: "123", Arabic: "456", Translation: "789"}
-	outputQ, args := NewDuaArgModel(input, args)
+	outputQ, args := NewDuaArgModel(input, args, duaRefVar)
 	if outputQ != expected {
 		t.Errorf("%s should be equal to %s", outputQ, expected)
 	}
@@ -31,7 +38,7 @@ func TestRefArgModel(t *testing.T) {
 	input := models.Reference{Name: "123"}
 	args := make(NeoArgs)
 	expected := `(r:Reference{name: {refName}})`
-	outputQ, args := NewRefArgModel(input, args)
+	outputQ, args := NewRefArgModel(input, args, refRefVar)
 
 	if outputQ != expected {
 		t.Errorf("%s should be equal to %s", outputQ, expected)
@@ -48,7 +55,7 @@ func TestNewEmotionArgModel(t *testing.T) {
 	args := make(NeoArgs)
 	expected := `(e:Emotion{name: {emoName}})`
 
-	outputQ, args := NewEmotionArgModel(input, args)
+	outputQ, args := NewEmotionArgModel(input, args, emoRefVar)
 	if outputQ != expected {
 		t.Errorf("%s should be equal to %s", outputQ, expected)
 		return
@@ -64,7 +71,7 @@ func TestNewOriginArgModel(t *testing.T) {
 		models.Reference{Name: "2"},
 	}}
 	expected := `(o:Origin{type: {orgType},references: {orgRefs}})`
-	q, args := NewOriginArgModel(o, make(NeoArgs))
+	q, args := NewOriginArgModel(o, make(NeoArgs), orgRefVar)
 	if q != expected {
 		t.Errorf("%s should be equal to %s", q, expected)
 		return

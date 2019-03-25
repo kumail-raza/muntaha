@@ -6,9 +6,12 @@ import (
 	"github.com/minhajuddinkhan/muntaha/models"
 )
 
-// NewDuaArgModel creates a new dua argument model for neo4j
-func NewDuaArgModel(dua models.Dua, args NeoArgs) (string, NeoArgs) {
+type ModelReference string
 
+// NewDuaArgModel creates a new dua argument model for neo4j
+func NewDuaArgModel(dua models.Dua, args NeoArgs, refVar ModelReference) (string, NeoArgs) {
+
+	modelRef := ModelReference(refVar)
 	duaRaw := ""
 	if dua.Arabic != "" {
 		duaRaw += "name: {duaName},"
@@ -23,12 +26,12 @@ func NewDuaArgModel(dua models.Dua, args NeoArgs) (string, NeoArgs) {
 		args["translation"] = dua.Translation
 	}
 	duaRaw = normalizeRawQuery(duaRaw)
-	return fmt.Sprintf("(d:Dua{%s})", duaRaw), args
+	return fmt.Sprintf("(%s:Dua{%s})", modelRef, duaRaw), args
 
 }
 
 // NewRefArgModel creates a new reference model for neo4j
-func NewRefArgModel(ref models.Reference, args NeoArgs) (string, NeoArgs) {
+func NewRefArgModel(ref models.Reference, args NeoArgs, refVar ModelReference) (string, NeoArgs) {
 
 	refRaw := ""
 	if ref.Name != "" {
@@ -40,23 +43,23 @@ func NewRefArgModel(ref models.Reference, args NeoArgs) (string, NeoArgs) {
 	//TODO:: add ref Id
 
 	refRaw = normalizeRawQuery(refRaw)
-	return fmt.Sprintf("(r:Reference{%s})", refRaw), args
+	return fmt.Sprintf("(%s:Reference{%s})", refVar, refRaw), args
 
 }
 
 // NewEmotionArgModel creates a new emotion model for neo4j
-func NewEmotionArgModel(emo models.Emotion, args NeoArgs) (string, NeoArgs) {
+func NewEmotionArgModel(emo models.Emotion, args NeoArgs, refVar ModelReference) (string, NeoArgs) {
 	emoRaw := ""
 	if emo.Name != "" {
 		emoRaw += `name: {emoName},`
 		args["emoName"] = emo.Name
 	}
 	emoRaw = normalizeRawQuery(emoRaw)
-	return fmt.Sprintf("(e:Emotion{%s})", emoRaw), args
+	return fmt.Sprintf("(%s:Emotion{%s})", refVar, emoRaw), args
 }
 
 // NewOriginArgModel creates new origin model for neo4j
-func NewOriginArgModel(o models.Origin, args NeoArgs) (string, NeoArgs) {
+func NewOriginArgModel(o models.Origin, args NeoArgs, refVar ModelReference) (string, NeoArgs) {
 
 	originRaw := ""
 	if o.Type != "" {
@@ -72,7 +75,7 @@ func NewOriginArgModel(o models.Origin, args NeoArgs) (string, NeoArgs) {
 		args["orgRefs"] = refs
 	}
 	originRaw = normalizeRawQuery(originRaw)
-	return fmt.Sprintf("(o:Origin{%s})", originRaw), args
+	return fmt.Sprintf("(%s:Origin{%s})", refVar, originRaw), args
 
 }
 

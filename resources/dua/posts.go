@@ -39,7 +39,10 @@ func (d *resource) CreateDua(req *restful.Request, res *restful.Response) {
 		Title:       body.Title,
 		Translation: body.Translation,
 	}
-	reqOr := models.Origin{References: body.References}
+	reqOr := models.Origin{
+		Type:       body.Origin,
+		References: body.References,
+	}
 
 	ds := dua.NewService(conn)
 

@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"net/http"
+
 	"github.com/emicklei/go-restful"
 	"github.com/minhajuddinkhan/muntaha/neo4j"
 	"github.com/minhajuddinkhan/muntaha/resources/dua"
@@ -30,9 +32,10 @@ func (mgr *resManager) SpawnAPIContainer(c *restful.Container) {
 
 	cors := restful.CrossOriginResourceSharing{
 		AllowedHeaders: []string{
-			"Content-Type", "Accept",
+			"Content-Type", "application/json",
 			"Access-Control-Allow-Origin", "*",
 		},
+		AllowedMethods: []string{http.MethodGet, http.MethodPost},
 	}
 	c.Filter(cors.Filter)
 

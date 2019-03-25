@@ -30,10 +30,10 @@ func CreateDua(d models.Dua, o models.Origin) (string, NeoArgs) {
 
 // GetDuaByTitle creates query and args for fetching dua by title
 func GetDuaByTitle(title string) (string, NeoArgs) {
-
 	args := make(map[string]interface{})
-	q, args := NewDuaArgModel(models.Dua{Title: title}, args)
-	return fmt.Sprintf("MATCH %s RETURN d", q), args
+	duaRef := "d"
+	q, args := NewDuaArgModel(models.Dua{Title: title}, args, "d")
+	return fmt.Sprintf("MATCH %s RETURN %s", q, duaRef), args
 }
 
 // GetAllDua creates query and args for fetching all duas
@@ -45,10 +45,12 @@ func GetAllDua() (string, NeoArgs) {
 func CreateRelationInRefAndDua(refName string, dua models.Dua) (string, NeoArgs) {
 
 	args := make(NeoArgs)
-	duaModel, args := NewDuaArgModel(dua, args)
-	refModel, args := NewRefArgModel(models.Reference{Name: refName}, args)
+	duaRef := ModelReference("d")
+	refRef := ModelReference("r")
+	duaModel, args := NewDuaArgModel(dua, args, duaRef)
+	refModel, args := NewRefArgModel(models.Reference{Name: refName}, args, refRef)
 
-	q := fmt.Sprintf(`MATCH %s,%s CREATE (d)-[:REFERENCED_IN]->(r)`, refModel, duaModel)
+	q := fmt.Sprintf(`MATCH %s,%s CREATE (%s)-[:REFERENCED_IN]->(%s)`, refModel, duaModel, duaRef, refRef)
 	return q, args
 
 }
@@ -57,9 +59,11 @@ func CreateRelationInRefAndDua(refName string, dua models.Dua) (string, NeoArgs)
 func CreateRelationInEmoAndDua(emo models.Emotion, dua models.Dua) (string, NeoArgs) {
 
 	args := make(NeoArgs)
-	emoModel, args := NewEmotionArgModel(emo, args)
-	duaModel, args := NewDuaArgModel(dua, args)
-	q := fmt.Sprintf("MATCH %s,%s CREATE (e)-[:RELATED]->(d)", emoModel, duaModel)
+	duaRef := ModelReference("d")
+	emoRef := ModelReference("e")
+	emoModel, args := NewEmotionArgModel(emo, args, emoRef)
+	duaModel, args := NewDuaArgModel(dua, args, duaRef)
+	q := fmt.Sprintf("MATCH %s,%s CREATE (%s)-[:RELATED]->(%s)", emoModel, duaModel, emoRef, duaRef)
 	return q, args
 }
 
@@ -67,8 +71,10 @@ func CreateRelationInEmoAndDua(emo models.Emotion, dua models.Dua) (string, NeoA
 func CreateRelationInOriginAndDua(o models.Origin, dua models.Dua) (string, NeoArgs) {
 
 	args := make(NeoArgs)
-	orgModel, args := NewOriginArgModel(o, args)
-	duaModel, args := NewDuaArgModel(dua, args)
-	q := fmt.Sprintf(`MATCH %s,%s CREATE (d)-[:REFERENCED_IN]->(o)`, orgModel, duaModel)
+	duaRef := ModelReference("d")
+	orgRef := ModelReference("o")
+	orgModel, args := NewOriginArgModel(o, args, orgRef)
+	duaModel, args := NewDuaArgModel(dua, args, duaRef)
+	q := fmt.Sprintf(`MATCH %s,%s CREATE (%s)-[:REFERENCED_IN]->(%s)`, orgModel, duaModel, duaRef, orgRef)
 	return q, args
 }

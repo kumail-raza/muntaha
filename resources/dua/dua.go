@@ -40,6 +40,13 @@ func (d *resource) WebService() *restful.WebService {
 			Writes([]models.Dua{}).
 			Returns(http.StatusOK, "OK", []models.Dua{}),
 	)
+	ws.Route(
+		ws.POST("/").
+			Filter(logger.ApiLogger).
+			To(d.CreateDua).
+			Doc("creates a new dua").
+			Returns(http.StatusOK, "OK", nil),
+	)
 
 	ws.Route(
 		ws.GET("/{emotion}").

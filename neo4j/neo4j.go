@@ -3,8 +3,6 @@ package neo4j
 import (
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
-
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 )
 
@@ -34,6 +32,5 @@ func NewNeo4jStore(username, password, host, port string) Neo4j {
 func (n *neo4j) Connect() (bolt.Conn, error) {
 	driver := bolt.NewDriver()
 	conn := fmt.Sprintf("bolt://%s:%s@%s:%s", n.Username, n.Password, n.Host, n.Port)
-	spew.Dump(conn)
 	return driver.OpenNeo(conn)
 }

@@ -3,8 +3,6 @@ package querybuilder
 import (
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
-
 	"github.com/minhajuddinkhan/muntaha/models"
 )
 
@@ -52,11 +50,10 @@ func TestCreateRelationInEmoAndDua(t *testing.T) {
 		return
 	}
 
-	spew.Dump(q, args)
 }
 
 func TestEmptyModel(t *testing.T) {
-	q, _ := NewDuaArgModel(models.Dua{}, make(NeoArgs))
+	q, _ := NewDuaArgModel(models.Dua{}, make(NeoArgs), duaRefVar)
 	expected := `(d:Dua{})`
 	if q != expected {
 		t.Errorf("%s should be equal to %s", q, expected)
