@@ -2,5 +2,5 @@ package models
 
 // Emotion emotion model
 type Emotion struct {
-	Name string `json:"name,omitempty"`
+	Name string `json:"name,omitempty" neo:"name"`
 }

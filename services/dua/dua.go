@@ -6,7 +6,7 @@ import (
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 	"github.com/johnnadratowski/golang-neo4j-bolt-driver/structures/graph"
 	"github.com/minhajuddinkhan/muntaha/models"
-	"github.com/minhajuddinkhan/muntaha/querybuilder"
+	"github.com/minhajuddinkhan/muntaha/repo"
 )
 
 // Service Service
@@ -30,7 +30,10 @@ const (
 )
 
 func (d *duaservice) GetAll() ([]models.Dua, error) {
-	query, args := querybuilder.GetAllDua()
+	query, args, err := repo.GetAllDua()
+	if err != nil {
+		return nil, err
+	}
 	nodes, _, _, err := d.Conn.QueryNeoAll(query, args)
 	if err != nil {
 		return nil, err
@@ -80,7 +83,10 @@ func (d *duaservice) GetByEmotion(name string) ([]models.Dua, error) {
 
 func (d *duaservice) CreateDua(dua models.Dua, emos []models.Emotion, org models.Origin) error {
 
-	query, args := querybuilder.GetDuaByTitle(dua.Title)
+	query, args, err := repo.GetDuaByTitle(dua.Title)
+	if err != nil {
+		return err
+	}
 	nodes, _, _, err := d.Conn.QueryNeoAll(query, args)
 	if err != nil {
 		return err
@@ -89,7 +95,7 @@ func (d *duaservice) CreateDua(dua models.Dua, emos []models.Emotion, org models
 		return fmt.Errorf("dua already exists with this title")
 	}
 
-	query, args = querybuilder.CreateDua(dua, org)
+	query, args = repo.CreateDua(dua, org)
 	if _, err = d.Conn.ExecNeo(query, args); err != nil {
 		return err
 	}
@@ -97,14 +103,20 @@ func (d *duaservice) CreateDua(dua models.Dua, emos []models.Emotion, org models
 	switch org.Type {
 	case "Hadeeth":
 		for _, ref := range org.References {
-			query, args := querybuilder.CreateRelationInRefAndDua(ref.Name, models.Dua{Title: dua.Title})
+			query, args, err := repo.CreateRelationInRefAndDua(ref.Name, models.Dua{Title: dua.Title})
+			if err != nil {
+				return fmt.Errorf("Unable to create query and args. err :%v", err)
+			}
 			if _, err := d.Conn.ExecNeo(query, args); err != nil {
-				return err
+				return fmt.Errorf("Could not execute query. err: %v", err)
 			}
 		}
 		break
 	case "Quran":
-		q, args := querybuilder.CreateRelationInOriginAndDua(org, models.Dua{Title: dua.Title})
+		q, args, err := repo.CreateRelationInOriginAndDua(org, models.Dua{Title: dua.Title})
+		if err != nil {
+			return err
+		}
 		if _, err := d.Conn.ExecNeo(q, args); err != nil {
 			return err
 		}
@@ -112,7 +124,10 @@ func (d *duaservice) CreateDua(dua models.Dua, emos []models.Emotion, org models
 	}
 
 	for _, e := range emos {
-		q, args := querybuilder.CreateRelationInEmoAndDua(e, models.Dua{Title: dua.Title})
+		q, args, err := repo.CreateRelationInEmoAndDua(e, models.Dua{Title: dua.Title})
+		if err != nil {
+			return err
+		}
 		if _, err := d.Conn.ExecNeo(q, args); err != nil {
 			return err
 		}

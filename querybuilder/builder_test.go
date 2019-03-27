@@ -3,7 +3,9 @@ package querybuilder
 import (
 	"testing"
 
-	"github.com/minhajuddinkhan/muntaha/models"
+	"github.com/davecgh/go-spew/spew"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -13,71 +15,41 @@ const (
 	emoRefVar = ModelReference("e")
 )
 
-func TestDuaArgModel(t *testing.T) {
+func TestNewModelWithArrayInterface(t *testing.T) {
 
-	args := make(NeoArgs)
-	expected := `(d:Dua{name: {duaName},title: {duaTitle},translation: {translation})`
-	input := models.Dua{Title: "123", Arabic: "456", Translation: "789"}
-	outputQ, args := NewDuaArgModel(input, args, duaRefVar)
-	if outputQ != expected {
-		t.Errorf("%s should be equal to %s", outputQ, expected)
-	}
-	if args["duaName"] != input.Arabic {
-		t.Errorf("%s should be equal to %s", args["duaName"], input.Arabic)
-	}
-	if args["duaTitle"] != input.Title {
-		t.Errorf("%s should be equal to %s", args["duaTitle"], input.Arabic)
-	}
-	if args["translation"] != input.Translation {
-		t.Errorf("%s should be equal to %s", args["translation"], input.Arabic)
-	}
-}
-
-func TestRefArgModel(t *testing.T) {
-
-	input := models.Reference{Name: "123"}
-	args := make(NeoArgs)
-	expected := `(r:Reference{name: {refName}})`
-	outputQ, args := NewRefArgModel(input, args, refRefVar)
-
-	if outputQ != expected {
-		t.Errorf("%s should be equal to %s", outputQ, expected)
-	}
-
-	if args["refName"] != input.Name {
-		t.Errorf("%s should be equal to %s", args["name"], input.Name)
-	}
-
-}
-
-func TestNewEmotionArgModel(t *testing.T) {
-	input := models.Emotion{Name: "1"}
-	args := make(NeoArgs)
-	expected := `(e:Emotion{name: {emoName}})`
-
-	outputQ, args := NewEmotionArgModel(input, args, emoRefVar)
-	if outputQ != expected {
-		t.Errorf("%s should be equal to %s", outputQ, expected)
-		return
-	}
-	if args["emoName"] != input.Name {
-		t.Errorf("%s should be equal to %s", args["emoName"], input.Name)
-		return
-	}
-}
-
-func TestNewOriginArgModel(t *testing.T) {
-	o := models.Origin{Type: "1", References: []models.Reference{
-		models.Reference{Name: "2"},
+	mwa := ModelWithArray{Type: "type", ArrayOfModels: []SimpleModel{
+		SimpleModel{Name: "sm"},
 	}}
-	expected := `(o:Origin{type: {orgType},references: {orgRefs}})`
-	q, args := NewOriginArgModel(o, make(NeoArgs), orgRefVar)
-	if q != expected {
-		t.Errorf("%s should be equal to %s", q, expected)
-		return
+	var intfs []interface{}
+	for _, i := range mwa.ArrayOfModels {
+		intfs = append(intfs, i.Name)
 	}
-	if args["orgType"] != o.Type {
-		t.Errorf("%s should be equal to %s", args["orgType"], o.Type)
-		return
-	}
+	args := make(NeoArgs)
+	expectedQ := `(mwa:ModelWithArray{type: {ModelWithArray.type},simpleModels: {ModelWithArray.simpleModels}})`
+	q, args, err := NewModel(mwa, args, "mwa")
+	assert.Nil(t, err)
+	assert.Equal(t, expectedQ, q)
+	assert.Equal(t, args["ModelWithArray.type"], mwa.Type)
+	assert.Equal(t, args["ModelWithArray.simpleModels"], intfs)
+}
+func TestNewModelWithStringAttributes(t *testing.T) {
+
+	sm := SimpleModel{Name: "mySimpleModel"}
+
+	expectedQ := `(sm:SimpleModel{name: {SimpleModel.name}})`
+	args := make(NeoArgs)
+	q, args, err := NewModel(sm, args, "sm")
+	assert.Nil(t, err)
+
+	assert.Equal(t, expectedQ, q)
+	assert.Equal(t, sm.Name, args["SimpleModel.name"])
+}
+
+func TestNewModelWithModelInAModel(t *testing.T) {
+	mwm := ModelWithModel{Referred: SimpleModel{Name: "123"}}
+	args := make(NeoArgs)
+	q, args, err := NewModel(mwm, args, "mwm")
+	assert.Nil(t, err)
+	spew.Dump(q, args)
+
 }
